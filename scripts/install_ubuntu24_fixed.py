@@ -318,124 +318,111 @@ def prepare(rType="MAIN"):
     else:
         printc("libzip5 already installed")
     
-    # Install Ubuntu 18 libraries using the comprehensive script - AUTOMATED SOLUTION
-    printc("Installing Ubuntu 18 libraries with comprehensive Xtream Codes compatibility fixes")
-    ubuntu18_script = r"""#!/bin/bash
-cd /tmp
-mkdir ubuntu18_libs
-cd ubuntu18_libs
-
-LIBS_DIR="/home/xtreamcodes/iptv_xtream_codes/lib"
-mkdir -p $LIBS_DIR
-
-echo "Downloading Ubuntu 18 compatibility libraries from GitHub repository..."
-
-# CRITICAL libraries from mirelsen/xtreanui-for-Ubuntu24 repository
-GITHUB_LIBS_URL="https://github.com/mirelsen/xtreanui-for-Ubuntu24/raw/main/libs"
-
-# CRITICAL: OpenSSL 1.0.x libraries for OPENSSL_1.0.1 fix
-wget -q "$GITHUB_LIBS_URL/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb"
-wget -q "$GITHUB_LIBS_URL/libssl1.0-dev_1.0.2n-1ubuntu5.13_amd64.deb"
-
-# CRITICAL: Curl libraries for CURL_OPENSSL_3 fix  
-wget -q "$GITHUB_LIBS_URL/libcurl3_7.58.0-2ubuntu2_amd64.deb"
-wget -q "$GITHUB_LIBS_URL/libcurl3-gnutls_7.58.0-2ubuntu3_amd64.deb"
-
-# CRITICAL: PNG12 libraries for PNG12_0 fix
-wget -q "$GITHUB_LIBS_URL/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb"
-
-# CRITICAL: Additional networking libraries for CURL/SSL compatibility  
-wget -q "$GITHUB_LIBS_URL/libnettle6_3.4-1_amd64.deb"
-wget -q "$GITHUB_LIBS_URL/libldap-2.4-2_2.4.45+dfsg-1ubuntu1.11_amd64.deb"
-wget -q "$GITHUB_LIBS_URL/libgssapi3-heimdal_7.5.0+dfsg-1_amd64.deb"
-
-# MySQL configuration package
-wget -q "$GITHUB_LIBS_URL/mysql-apt-config_0.8.22-1_all.deb"
-
-echo "Installing system-wide Ubuntu 18 compatibility libraries..."
-# Install all packages with dependency resolution
-dpkg -i *.deb > /dev/null 2>&1
-apt-get install -f -y > /dev/null 2>&1
-
-echo "Extracting additional libraries to Xtream Codes lib directory..."
-# Extract all .so files to Xtream Codes lib directory for runtime linking
-for deb_file in *.deb; do
-    if [ -f "$deb_file" ]; then
-        package_name=$(basename "$deb_file" .deb)
-        mkdir -p "/tmp/extract_$package_name"
-        cd "/tmp/extract_$package_name"
-        ar x "../$deb_file" > /dev/null 2>&1
-        if [ -f "data.tar.xz" ]; then
-            tar xf data.tar.xz > /dev/null 2>&1
-            # Copy all .so files to Xtream lib directory
-            find . -name "*.so*" -type f -exec cp {} "$LIBS_DIR/" \; > /dev/null 2>&1
+    # Install Ubuntu 18 libraries directly from GitHub repository
+    printc("Installing Ubuntu 18 libraries from GitHub repository...")
+    
+    # Create library directory
+    libs_dir = "/home/xtreamcodes/iptv_xtream_codes/lib"
+    subprocess.run(f"mkdir -p {libs_dir}", shell=True)
+    
+    # Create temporary directory
+    subprocess.run("mkdir -p /tmp/ubuntu18_libs && cd /tmp/ubuntu18_libs", shell=True)
+    
+    # GitHub repository URL for libraries
+    github_libs_url = "https://github.com/mirelsen/xtreanui-for-Ubuntu24/raw/main/libs"
+    
+    # List of critical libraries to download
+    ubuntu18_libs = [
+        "libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb",
+        "libssl1.0-dev_1.0.2n-1ubuntu5.13_amd64.deb", 
+        "libcurl3_7.58.0-2ubuntu2_amd64.deb",
+        "libcurl3-gnutls_7.58.0-2ubuntu3_amd64.deb",
+        "libpng12-0_1.2.54-1ubuntu1_amd64.deb",
+        "libnettle6_3.4-1_amd64.deb",
+        "libldap-2.4-2_2.4.45+dfsg-1ubuntu1_amd64.deb",
+        "libgssapi3-heimdal_7.5.0+dfsg-1_amd64.deb",
+        "mysql-apt-config_0.8.22-1_all.deb"
+    ]
+    
+    # Download all libraries
+    printc(f"Downloading {len(ubuntu18_libs)} Ubuntu 18 compatibility libraries...")
+    for lib in ubuntu18_libs:
+        download_url = f"{github_libs_url}/{lib}"
+        printc(f"Downloading {lib}...")
+        result = subprocess.run(f"wget -q -O /tmp/ubuntu18_libs/{lib} {download_url}", shell=True)
+        if result.returncode != 0:
+            printc(f"Warning: Failed to download {lib}", col.BRIGHT_YELLOW)
+    
+    # Install all packages system-wide
+    printc("Installing Ubuntu 18 compatibility libraries system-wide...")
+    subprocess.run("cd /tmp/ubuntu18_libs && dpkg -i *.deb > /dev/null 2>&1", shell=True)
+    subprocess.run("apt-get install -f -y > /dev/null 2>&1", shell=True)
+    
+    # Extract libraries to Xtream Codes lib directory
+    printc("Extracting libraries to Xtream Codes lib directory...")
+    subprocess.run(f"""
+    cd /tmp/ubuntu18_libs
+    for deb_file in *.deb; do
+        if [ -f "$deb_file" ]; then
+            package_name=$(basename "$deb_file" .deb)
+            mkdir -p "/tmp/extract_$package_name"
+            cd "/tmp/extract_$package_name"
+            ar x "../$deb_file" > /dev/null 2>&1
+            if [ -f "data.tar.xz" ]; then
+                tar xf data.tar.xz > /dev/null 2>&1
+                find . -name "*.so*" -type f -exec cp {{}} {libs_dir}/ \\; > /dev/null 2>&1
+            fi
+            cd /tmp/ubuntu18_libs
+            rm -rf "/tmp/extract_$package_name"
         fi
-        cd /tmp/ubuntu18_libs
-        rm -rf "/tmp/extract_$package_name"
-    fi
-done
-
-echo "Creating comprehensive compatibility symlinks..."
-cd "$LIBS_DIR"
-
-# Create symlinks for versioned libraries
-for file in *.so.*; do
-    if [[ $file == *.so.*.* ]]; then
-        base=$(echo $file | sed 's/\\(.*\\.so\\.[0-9]\\+\\)\\..*/\\1/')
-        if [ ! -L "$base" ] && [ ! -f "$base" ]; then
-            ln -sf "$file" "$base" > /dev/null 2>&1
+    done
+    """, shell=True)
+    
+    # Create critical symlinks
+    printc("Creating critical compatibility symlinks...")
+    subprocess.run(f"""
+    cd {libs_dir}
+    
+    # Create symlinks for versioned libraries
+    for file in *.so.*; do
+        if [[ $file == *.so.*.* ]]; then
+            base=$(echo $file | sed 's/\\(.*\\.so\\.[0-9]\\+\\)\\..*/\\1/')
+            if [ ! -L "$base" ] && [ ! -f "$base" ]; then
+                ln -sf "$file" "$base" > /dev/null 2>&1
+            fi
         fi
+    done
+    
+    # System-wide critical symlinks
+    # Fix CURL_OPENSSL_3 error
+    if [ -f "/usr/lib/x86_64-linux-gnu/libcurl.so.4.4.0" ]; then
+        ln -sf /usr/lib/x86_64-linux-gnu/libcurl.so.4.4.0 /usr/lib/x86_64-linux-gnu/libcurl.so.4
     fi
-done
-
-# CRITICAL system-wide symlinks for immediate compatibility
-# Fix CURL_OPENSSL_3 error
-if [ -f "/usr/lib/x86_64-linux-gnu/libcurl.so.4.4.0" ]; then
-    ln -sf /usr/lib/x86_64-linux-gnu/libcurl.so.4.4.0 /usr/lib/x86_64-linux-gnu/libcurl.so.4
-fi
-
-# Fix OPENSSL_1.0.1 error  
-if [ -f "/usr/lib/x86_64-linux-gnu/libssl.so.1.0.0" ]; then
-    ln -sf /usr/lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/x86_64-linux-gnu/libssl.so.1.0
-    ln -sf /usr/lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/x86_64-linux-gnu/libcrypto.so.1.0
-fi
-
-# Fix PNG12_0 error - multiple locations for maximum compatibility
-if [ -f "/usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0" ]; then
-    ln -sf /usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0 /usr/lib/x86_64-linux-gnu/libpng12.so.0
-    ln -sf /usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0 /lib/x86_64-linux-gnu/libpng12.so.0
-    # Also copy to Xtream lib directory
-    cp /usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0 "$LIBS_DIR/"
-    cd "$LIBS_DIR"
-    ln -sf libpng12.so.0.54.0 libpng12.so.0
-    ln -sf libpng12.so.0.54.0 libpng12.so
-fi
-
-# Refresh library cache
-ldconfig
-
-echo "✅ ALL Ubuntu 18 compatibility libraries installed with Xtream Codes fixes"
-echo "Libraries available in: $LIBS_DIR"
-echo "System-wide compatibility: ACTIVATED"
-
-# Cleanup
-cd /tmp
-rm -rf ubuntu18_libs
-"""
     
-    # Write and execute Ubuntu 18 libraries script
-    with open("/tmp/install_ubuntu18_libs.sh", "w") as f:
-        f.write(ubuntu18_script)
+    # Fix OPENSSL_1.0.1 error  
+    if [ -f "/usr/lib/x86_64-linux-gnu/libssl.so.1.0.0" ]; then
+        ln -sf /usr/lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/x86_64-linux-gnu/libssl.so.1.0
+        ln -sf /usr/lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/x86_64-linux-gnu/libcrypto.so.1.0
+    fi
     
-    subprocess.run("chmod +x /tmp/install_ubuntu18_libs.sh", shell=True)
-    subprocess.run("/tmp/install_ubuntu18_libs.sh", shell=True)
+    # Fix PNG12_0 error - multiple locations
+    if [ -f "/usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0" ]; then
+        ln -sf /usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0 /usr/lib/x86_64-linux-gnu/libpng12.so.0
+        ln -sf /usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0 /lib/x86_64-linux-gnu/libpng12.so.0
+        cp /usr/lib/x86_64-linux-gnu/libpng12.so.0.54.0 {libs_dir}/
+        cd {libs_dir}
+        ln -sf libpng12.so.0.54.0 libpng12.so.0
+        ln -sf libpng12.so.0.54.0 libpng12.so
+    fi
     
-    try: 
-        os.remove("/tmp/install_ubuntu18_libs.sh")
-    except: 
-        pass
+    # Refresh library cache
+    ldconfig
+    """, shell=True)
     
-    printc("Ubuntu 18 compatibility libraries installed")
+    # Cleanup
+    subprocess.run("rm -rf /tmp/ubuntu18_libs", shell=True)
+    
+    printc("✅ Ubuntu 18 compatibility libraries installed from GitHub repository")
     
     # Verifică componente Python2.7 și instaleză doar ce lipsește
     python_installed = subprocess.run("python2.7 --version > /dev/null 2>&1", shell=True).returncode == 0 or subprocess.run("python --version 2>&1 | grep 'Python 2.7' > /dev/null", shell=True).returncode == 0
