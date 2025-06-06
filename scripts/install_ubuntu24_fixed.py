@@ -1,5 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+"""
+🚀 Xtream UI for Ubuntu 24.04 LTS - Enhanced Installer
+📂 Repository: https://github.com/mirelsen/xtreanui-for-Ubuntu24
+🔧 Uses Ubuntu 18 compatibility libraries from GitHub repository
+✅ Supports MariaDB 10.5+, complete SSL/CURL/PNG fixes
+"""
 import subprocess, os, random, string, sys, shutil, socket, zipfile, urllib.request, urllib.error, urllib.parse, json, base64, time
 from itertools import cycle
 from zipfile import ZipFile
@@ -317,51 +323,29 @@ cd ubuntu18_libs
 LIBS_DIR="/home/xtreamcodes/iptv_xtream_codes/lib"
 mkdir -p $LIBS_DIR
 
-echo "Downloading ALL Ubuntu 18 compatibility libraries for Xtream Codes..."
+echo "Downloading Ubuntu 18 compatibility libraries from GitHub repository..."
 
-# Core system libraries for Ubuntu 18 compatibility
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi6_3.2.1-8_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libg/libgpg-error/libgpg-error0_1.27-6_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libg/libgcrypt20/libgcrypt20_1.8.1-4ubuntu1.3_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/s/systemd/libsystemd0_237-3ubuntu10.57_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libu/libudev/libudev1_237-3ubuntu10.57_amd64.deb
+# CRITICAL libraries from mirelsen/xtreanui-for-Ubuntu24 repository
+GITHUB_LIBS_URL="https://github.com/mirelsen/xtreanui-for-Ubuntu24/raw/main/libs"
 
 # CRITICAL: OpenSSL 1.0.x libraries for OPENSSL_1.0.1 fix
-wget -q http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb
-wget -q http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libcrypto1.0.0-udeb_1.0.2n-1ubuntu5.13_amd64.udeb
+wget -q "$GITHUB_LIBS_URL/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb"
+wget -q "$GITHUB_LIBS_URL/libssl1.0-dev_1.0.2n-1ubuntu5.13_amd64.deb"
 
-# CRITICAL: Curl libraries for CURL_OPENSSL_3 fix - comprehensive set
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/c/curl/libcurl3_7.58.0-2ubuntu2_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/c/curl/libcurl3-gnutls_7.58.0-2ubuntu3_amd64.deb
+# CRITICAL: Curl libraries for CURL_OPENSSL_3 fix  
+wget -q "$GITHUB_LIBS_URL/libcurl3_7.58.0-2ubuntu2_amd64.deb"
+wget -q "$GITHUB_LIBS_URL/libcurl3-gnutls_7.58.0-2ubuntu3_amd64.deb"
 
 # CRITICAL: PNG12 libraries for PNG12_0 fix
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb
+wget -q "$GITHUB_LIBS_URL/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb"
 
-# CRITICAL: Additional networking libraries for CURL/SSL compatibility
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/n/nettle/libnettle6_3.4-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/o/openldap/libldap-2.4-2_2.4.45+dfsg-1ubuntu1.11_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libgssapi3-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libheimntlm0-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libkrb5-26-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libasn1-8-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libhcrypto4-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libhx509-5-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libroken18-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libwind0-heimdal_7.5.0+dfsg-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/h/heimdal/libheimbase1-heimdal_7.5.0+dfsg-1_amd64.deb
+# CRITICAL: Additional networking libraries for CURL/SSL compatibility  
+wget -q "$GITHUB_LIBS_URL/libnettle6_3.4-1_amd64.deb"
+wget -q "$GITHUB_LIBS_URL/libldap-2.4-2_2.4.45+dfsg-1ubuntu1.11_amd64.deb"
+wget -q "$GITHUB_LIBS_URL/libgssapi3-heimdal_7.5.0+dfsg-1_amd64.deb"
 
-# X11 libraries 
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libb/libbsd/libbsd0_0.8.7-1ubuntu0.1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libxau/libxau6_1.0.8-1ubuntu1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libxdmcp/libxdmcp6_1.1.2-3_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libxcb/libxcb1_1.13-2ubuntu2_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libx11/libx11-6_1.6.4-3ubuntu0.4_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libx11/libx11-data_1.6.4-3ubuntu0.4_all.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libxext/libxext6_1.3.3-1build1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libxrender/libxrender1_0.9.10-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/libx/libxft/libxft2_2.3.2-1_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/f/fontconfig/libfontconfig1_2.12.6-0ubuntu2_amd64.deb
-wget -q http://archive.ubuntu.com/ubuntu/pool/main/f/freetype/libfreetype6_2.8.1-2ubuntu2.2_amd64.deb
+# MySQL configuration package
+wget -q "$GITHUB_LIBS_URL/mysql-apt-config_0.8.22-1_all.deb"
 
 echo "Installing system-wide Ubuntu 18 compatibility libraries..."
 # Install all packages with dependency resolution
