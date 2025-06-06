@@ -186,6 +186,11 @@ def prepare(rType="MAIN"):
         except: 
             pass
     
+    # Fix broken package installations
+    printc("Fixing any broken package installations")
+    subprocess.run("dpkg --configure -a", shell=True)
+    subprocess.run("apt-get install -f -y > /dev/null 2>&1", shell=True)
+    
     # Update system
     printc("Updating Operating System")
     subprocess.run("apt-get update -y > /dev/null 2>&1", shell=True)
